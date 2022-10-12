@@ -2,10 +2,10 @@ package backup
 
 import (
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"time"
-	"net/url"
 
 	"github.com/codeskyblue/go-sh"
 	"github.com/pkg/errors"
@@ -13,7 +13,7 @@ import (
 	"github.com/stefanprodan/mgob/pkg/config"
 )
 
-func s3Upload(file string, plan config.Plan, useAwsCli bool) (string, error) {
+func s3Upload(file string, plan config.Plan, t time.Time, useAwsCli bool) (string, error) {
 
 	s3Url, err := url.Parse(plan.S3.URL)
 
@@ -22,13 +22,13 @@ func s3Upload(file string, plan config.Plan, useAwsCli bool) (string, error) {
 	}
 
 	if useAwsCli && strings.HasSuffix(s3Url.Hostname(), "amazonaws.com") {
-		return awsUpload(file, plan)
+		return awsUpload(file, plan, t)
 	}
 
 	return minioUpload(file, plan)
 }
 
-func awsUpload(file string, plan config.Plan) (string, error) {
+func awsUpload(file string, plan config.Plan, t time.Time) (string, error) {
 
 	output := ""
 	if len(plan.S3.AccessKey) > 0 && len(plan.S3.SecretKey) > 0 {
@@ -57,8 +57,12 @@ func awsUpload(file string, plan config.Plan) (string, error) {
 		storage = fmt.Sprintf(" --storage-class %v", plan.S3.StorageClass)
 	}
 
+	s3Filename := fmt.Sprintf("%s%s", plan.S3.Prefix, fileName)
+	if plan.S3.AddDatePrefix {
+		s3Filename = fmt.Sprintf("%s%d/%s", plan.S3.Prefix, t.Unix(), fileName)
+	}
 	upload := fmt.Sprintf("aws --quiet s3 cp %v s3://%v/%v%v%v",
-		file, plan.S3.Bucket, fileName, encrypt, storage)
+		file, plan.S3.Bucket, s3Filename, encrypt, storage)
 
 	result, err := sh.Command("/bin/sh", "-c", upload).SetTimeout(time.Duration(plan.Scheduler.Timeout) * time.Minute).CombinedOutput()
 	if len(result) > 0 {

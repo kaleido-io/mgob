@@ -196,7 +196,7 @@ func runDumpAndUpload(c *dumpConfig) (Result, error) {
 	}
 
 	if c.plan.S3 != nil {
-		s3Output, err := s3Upload(file, c.plan, c.conf.UseAwsCli)
+		s3Output, err := s3Upload(file, c.plan, c.ts, c.conf.UseAwsCli)
 		if err != nil {
 			return res, err
 		} else {
