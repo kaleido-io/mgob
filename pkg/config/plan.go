@@ -10,9 +10,17 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+type BackupMode string
+
+const (
+	BackupModeSingle   BackupMode = "single"
+	BackupModeDatabase BackupMode = "database"
+)
+
 type Plan struct {
 	Name       string      `yaml:"name"`
 	Target     Target      `yaml:"target"`
+	Mode       BackupMode  `yaml:"mode"`
 	Scheduler  Scheduler   `yaml:"scheduler"`
 	Encryption *Encryption `yaml:"encryption"`
 	S3         *S3         `yaml:"s3"`
@@ -25,13 +33,16 @@ type Plan struct {
 }
 
 type Target struct {
-	Database string `yaml:"database"`
-	Host     string `yaml:"host"`
-	Uri      string `yaml:"uri"`
-	Password string `yaml:"password"`
-	Port     int    `yaml:"port"`
-	Username string `yaml:"username"`
-	Params   string `yaml:"params"`
+	Database           string   `yaml:"database"`
+	Collection         string   `yaml:"collection"`
+	ExcludeDatabases   []string `yaml:"excludeDatabases"`
+	ExcludeCollections []string `yaml:"excludeCollections"`
+	Host               string   `yaml:"host"`
+	Uri                string   `yaml:"uri"`
+	Password           string   `yaml:"password"`
+	Port               int      `yaml:"port"`
+	Username           string   `yaml:"username"`
+	Params             string   `yaml:"params"`
 }
 
 type Scheduler struct {
