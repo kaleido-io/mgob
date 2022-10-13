@@ -43,6 +43,7 @@ func Run(plan config.Plan, conf *config.AppConfig, modules *config.ModuleConfig)
 		planDir:     fmt.Sprintf("%v/%v", conf.StoragePath, plan.Name),
 		name:        plan.Name,
 	}
+	log.WithField("plan", c.plan.Name).Info("Initiating backup (mode=%s)", config.BackupModeSingle)
 	switch plan.Mode {
 	case config.BackupModeDatabase:
 		return runDumpPerDBAndUpload(c)
