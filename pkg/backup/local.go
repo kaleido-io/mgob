@@ -18,6 +18,13 @@ func dump(c *dumpConfig) (string, string, error) {
 	mlog := fmt.Sprintf("%v/%v-%v.log", c.tmpPath, c.name, c.ts.Unix())
 	dump := fmt.Sprintf("mongodump --archive=%v --gzip ", archive)
 
+	log.WithFields(log.Fields{
+		"database": c.database,
+		"archive":  archive,
+		"mlog":     mlog,
+		"planDir":  c.planDir,
+	}).Info("starting dump")
+
 	if c.plan.Target.Uri != "" {
 		// using uri (New in version 3.4.6)
 		// host/port/username/password are incompatible with uri

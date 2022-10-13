@@ -80,7 +80,7 @@ func getDBNames(c *dumpConfig) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list databases: %s", err)
 	}
-	log.WithField("plan", c.plan.Name).Info("Listing MonogoDB databases: %d databases", len(dbNames))
+	log.WithField("plan", c.plan.Name).Infof("Listing MonogoDB databases: %d databases", len(dbNames))
 	return dbNames, nil
 }
 
@@ -106,10 +106,10 @@ dbLoop:
 			log.WithField("plan", c.name).Infof("Excluded backup of DB '%s'", dbName)
 		}
 		attempts++
-		dc := *c
-		dc.database = dbName
-		dc.name = fmt.Sprintf("%s-%s", dc.plan.Name, dbName)
-		res, err := runDumpAndUpload(c)
+		dbConf := *c
+		dbConf.database = dbName
+		dbConf.name = fmt.Sprintf("%s-%s", c.plan.Name, dbName)
+		res, err := runDumpAndUpload(&dbConf)
 		if err != nil {
 			log.WithField("plan", c.name).Errorf("Backup failed: %s", err)
 			failedDBs = append(failedDBs, dbName)
@@ -128,6 +128,7 @@ dbLoop:
 }
 
 func runDumpAndUpload(c *dumpConfig) (Result, error) {
+
 	archive, mlog, err := dump(c)
 	log.WithFields(log.Fields{
 		"archive": archive,
