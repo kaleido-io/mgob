@@ -2,48 +2,63 @@ package backup
 
 import (
 	"fmt"
-	"os"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/codeskyblue/go-sh"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/stefanprodan/mgob/pkg/config"
 )
 
-func dump(plan config.Plan, tmpPath string, ts time.Time) (string, string, error) {
-	archive := fmt.Sprintf("%v/%v-%v.gz", tmpPath, plan.Name, ts.Unix())
-	mlog := fmt.Sprintf("%v/%v-%v.log", tmpPath, plan.Name, ts.Unix())
+func dump(c *dumpConfig) (string, string, error) {
+
+	archive := fmt.Sprintf("%v/%v-%v.gz", c.tmpPath, c.name, c.ts.Unix())
+	mlog := fmt.Sprintf("%v/%v-%v.log", c.tmpPath, c.name, c.ts.Unix())
 	dump := fmt.Sprintf("mongodump --archive=%v --gzip ", archive)
 
-	if plan.Target.Uri != "" {
+	log.WithFields(log.Fields{
+		"database": c.database,
+		"archive":  archive,
+		"mlog":     mlog,
+		"planDir":  c.planDir,
+	}).Info("starting dump")
+
+	if c.plan.Target.Uri != "" {
 		// using uri (New in version 3.4.6)
 		// host/port/username/password are incompatible with uri
 		// https://docs.mongodb.com/manual/reference/program/mongodump/#cmdoption-mongodump-uri
-		dump += fmt.Sprintf(`--uri "%v" `, plan.Target.Uri)
+		dump += fmt.Sprintf(`--uri "%v" `, c.plan.Target.Uri)
 	} else {
 		// use older host/port
-		dump += fmt.Sprintf("--host %v --port %v ", plan.Target.Host, plan.Target.Port)
+		dump += fmt.Sprintf("--host %v --port %v ", c.plan.Target.Host, c.plan.Target.Port)
 
-		if plan.Target.Username != "" && plan.Target.Password != "" {
-			dump += fmt.Sprintf(`-u "%v" -p "%v" `, plan.Target.Username, plan.Target.Password)
+		if c.plan.Target.Username != "" && c.plan.Target.Password != "" {
+			dump += fmt.Sprintf(`-u "%v" -p "%v" `, c.plan.Target.Username, c.plan.Target.Password)
 		}
 	}
 
-	if plan.Target.Database != "" {
-		dump += fmt.Sprintf("--db %v ", plan.Target.Database)
+	if c.database != "" {
+		dump += fmt.Sprintf("--db %v ", c.database)
+	}
+	if c.plan.Target.Collection != "" {
+		dump += fmt.Sprintf("--collection %v ", c.plan.Target.Collection)
 	}
 
-	if plan.Target.Params != "" {
-		dump += fmt.Sprintf("%v", plan.Target.Params)
+	for _, excludeCollection := range c.plan.Target.ExcludeCollections {
+		if excludeCollection != "" {
+			dump += fmt.Sprintf("--excludeCollection %v ", excludeCollection)
+		}
+	}
+
+	if c.plan.Target.Params != "" {
+		dump += fmt.Sprintf("%v", c.plan.Target.Params)
 	}
 
 	// TODO: mask password
 	log.Debugf("dump cmd: %v", dump)
-	output, err := sh.Command("/bin/sh", "-c", dump).SetTimeout(time.Duration(plan.Scheduler.Timeout) * time.Minute).CombinedOutput()
+	output, err := sh.Command("/bin/sh", "-c", dump).SetTimeout(time.Duration(c.plan.Scheduler.Timeout) * time.Minute).CombinedOutput()
 	if err != nil {
 		ex := ""
 		if len(output) > 0 {

@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/sh -x
 
 apk add --no-cache ca-certificates tzdata bash curl krb5-dev
 

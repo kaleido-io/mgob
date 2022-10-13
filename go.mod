@@ -15,6 +15,7 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli v1.22.5
+	go.mongodb.org/mongo-driver v1.9.2 // indirect
 	golang.org/x/crypto v0.0.0-20220128200615-198e4374d7ed
 	gopkg.in/yaml.v2 v2.4.0
 )
