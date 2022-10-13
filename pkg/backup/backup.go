@@ -68,15 +68,18 @@ func getDBNames(c *dumpConfig) ([]string, error) {
 	mdbCtx, cancel := context.WithTimeout(context.Background(), mongodbDatabaseListTimeout)
 	defer cancel()
 
+	log.WithField("plan", c.plan.Name).Info("Listing MonogoDB databases: connecting")
 	client, err := mongo.Connect(mdbCtx, options.Client().ApplyURI(c.plan.Target.Uri))
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to MongoDB: %s", err)
 	}
+	log.WithField("plan", c.plan.Name).Info("Listing MonogoDB databases: connected")
 	defer client.Disconnect(context.Background())
 	dbNames, err := client.ListDatabaseNames(mdbCtx, bson.D{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list databases: %s", err)
 	}
+	log.WithField("plan", c.plan.Name).Info("Listing MonogoDB databases: %d databases", len(dbNames))
 	return dbNames, nil
 }
 
