@@ -44,7 +44,9 @@ func (s *Scheduler) Start() error {
 		if err != nil {
 			return errors.Wrapf(err, "Invalid cron %v for plan %v", plan.Scheduler.Cron, plan.Name)
 		}
-		s.Cron.Schedule(schedule, backupJob{plan.Name, plan, s.Config, s.Modules, s.Stats, s.metrics, s.Cron})
+		wrappedJob := cron.NewChain(cron.SkipIfStillRunning(cron.DefaultLogger)).
+			Then(&backupJob{plan.Name, plan, s.Config, s.Modules, s.Stats, s.metrics, s.Cron})
+		s.Cron.Schedule(schedule, wrappedJob)
 	}
 
 	s.Cron.AddFunc("0 0 */1 * *", func() {
