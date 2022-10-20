@@ -6,7 +6,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/pkg/errors"
-	"github.com/robfig/cron"
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/stefanprodan/mgob/pkg/backup"
@@ -44,7 +44,9 @@ func (s *Scheduler) Start() error {
 		if err != nil {
 			return errors.Wrapf(err, "Invalid cron %v for plan %v", plan.Scheduler.Cron, plan.Name)
 		}
-		s.Cron.Schedule(schedule, backupJob{plan.Name, plan, s.Config, s.Modules, s.Stats, s.metrics, s.Cron})
+		wrappedJob := cron.NewChain(cron.SkipIfStillRunning(cron.DefaultLogger)).
+			Then(&backupJob{plan.Name, plan, s.Config, s.Modules, s.Stats, s.metrics, s.Cron})
+		s.Cron.Schedule(schedule, wrappedJob)
 	}
 
 	s.Cron.AddFunc("0 0 */1 * *", func() {
