@@ -6,7 +6,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/pkg/errors"
-	"github.com/robfig/cron"
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/stefanprodan/mgob/pkg/backup"

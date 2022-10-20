@@ -12,10 +12,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.4
 	github.com/prometheus/client_golang v1.12.1
-	github.com/robfig/cron v1.2.0
+	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli v1.22.5
-	go.mongodb.org/mongo-driver v1.9.2 // indirect
+	go.mongodb.org/mongo-driver v1.9.2
 	golang.org/x/crypto v0.0.0-20220128200615-198e4374d7ed
 	gopkg.in/yaml.v2 v2.4.0
 )
